@@ -383,10 +383,10 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       expect(users[0].username).to.exist;
     });
 
-    it('creates the deletedAt property, when defining paranoid as true', async function() {
+    it('creates the deleted property, when defining paranoid as true', async function() {
       await this.ParanoidUser.create({ username: 'fnord' });
       const users = await this.ParanoidUser.findAll();
-      expect(users[0].deletedAt).to.be.null;
+      expect(users[0].deleted).to.be.null;
     });
 
     it('destroys a record with a primary key of something other than id', async function() {
@@ -405,29 +405,29 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       await user.destroy();
     });
 
-    it('sets deletedAt property to a specific date when deleting an instance', async function() {
+    it('sets deleted property to a specific date when deleting an instance', async function() {
       await this.ParanoidUser.create({ username: 'fnord' });
       const users = await this.ParanoidUser.findAll();
       await users[0].destroy();
-      expect(users[0].deletedAt.getMonth).to.exist;
+      expect(users[0].deleted.getMonth).to.exist;
 
       const user = await users[0].reload({ paranoid: false });
-      expect(user.deletedAt.getMonth).to.exist;
+      expect(user.deleted.getMonth).to.exist;
     });
 
-    it('keeps the deletedAt-attribute with value null, when running update', async function() {
+    it('keeps the deleted-attribute with value null, when running update', async function() {
       await this.ParanoidUser.create({ username: 'fnord' });
       const users = await this.ParanoidUser.findAll();
       const user = await users[0].update({ username: 'newFnord' });
-      expect(user.deletedAt).not.to.exist;
+      expect(user.deleted).not.to.exist;
     });
 
-    it('keeps the deletedAt-attribute with value null, when updating associations', async function() {
+    it('keeps the deleted-attribute with value null, when updating associations', async function() {
       await this.ParanoidUser.create({ username: 'fnord' });
       const users = await this.ParanoidUser.findAll();
       const linkedUser = await this.ParanoidUser.create({ username: 'linkedFnord' });
       const user = await users[0].setParanoidUser(linkedUser);
-      expect(user.deletedAt).not.to.exist;
+      expect(user.deleted).not.to.exist;
     });
 
     it('can reuse query option objects', async function() {
@@ -545,19 +545,19 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       expect(user.isSoftDeleted()).to.be.true;
     });
 
-    it('works with custom `deletedAt` field name', async function() {
-      this.ParanoidUserWithCustomDeletedAt = this.sequelize.define('ParanoidUserWithCustomDeletedAt', {
+    it('works with custom `deleted` field name', async function() {
+      this.ParanoidUserWithCustomdeleted = this.sequelize.define('ParanoidUserWithCustomdeleted', {
         username: { type: DataTypes.STRING }
       }, {
-        deletedAt: 'deletedAtThisTime',
+        deleted: 'deletedThisTime',
         paranoid: true
       });
 
-      this.ParanoidUserWithCustomDeletedAt.hasOne(this.ParanoidUser);
+      this.ParanoidUserWithCustomdeleted.hasOne(this.ParanoidUser);
 
-      await this.ParanoidUserWithCustomDeletedAt.sync({ force: true });
-      await this.ParanoidUserWithCustomDeletedAt.create({ username: 'fnord' });
-      const users = await this.ParanoidUserWithCustomDeletedAt.findAll();
+      await this.ParanoidUserWithCustomdeleted.sync({ force: true });
+      await this.ParanoidUserWithCustomdeleted.create({ username: 'fnord' });
+      const users = await this.ParanoidUserWithCustomdeleted.findAll();
       expect(users[0].isSoftDeleted()).to.be.false;
 
       await users[0].destroy();
@@ -597,11 +597,11 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       expect(user.username).to.equal('Peter');
     });
 
-    it('supports custom deletedAt field', async function() {
+    it('supports custom deleted field', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: DataTypes.STRING,
         destroyTime: DataTypes.DATE
-      }, { paranoid: true, deletedAt: 'destroyTime' });
+      }, { paranoid: true, deleted: 'destroyTime' });
 
       await ParanoidUser.sync({ force: true });
 
@@ -611,19 +611,19 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       const user1 = await user2.destroy();
       expect(user1.destroyTime).to.be.ok;
-      expect(user1.deletedAt).to.not.be.ok;
+      expect(user1.deleted).to.not.be.ok;
       const user0 = await user1.restore();
       expect(user0.destroyTime).to.not.be.ok;
       const user = await ParanoidUser.findOne({ where: { username: 'username' } });
       expect(user).to.be.ok;
       expect(user.destroyTime).to.not.be.ok;
-      expect(user.deletedAt).to.not.be.ok;
+      expect(user.deleted).to.not.be.ok;
     });
 
-    it('supports custom deletedAt field name', async function() {
+    it('supports custom deleted field name', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: DataTypes.STRING,
-        deletedAt: { type: DataTypes.DATE, field: 'deleted_at' }
+        deleted: { type: DataTypes.DATE, field: 'deleted_at' }
       }, { paranoid: true });
 
       await ParanoidUser.sync({ force: true });
@@ -633,22 +633,22 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       const user1 = await user2.destroy();
-      expect(user1.dataValues.deletedAt).to.be.ok;
+      expect(user1.dataValues.deleted).to.be.ok;
       expect(user1.dataValues.deleted_at).to.not.be.ok;
       const user0 = await user1.restore();
-      expect(user0.dataValues.deletedAt).to.not.be.ok;
+      expect(user0.dataValues.deleted).to.not.be.ok;
       expect(user0.dataValues.deleted_at).to.not.be.ok;
       const user = await ParanoidUser.findOne({ where: { username: 'username' } });
       expect(user).to.be.ok;
-      expect(user.deletedAt).to.not.be.ok;
+      expect(user.deleted).to.not.be.ok;
       expect(user.deleted_at).to.not.be.ok;
     });
 
-    it('supports custom deletedAt field and database column', async function() {
+    it('supports custom deleted field and database column', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: DataTypes.STRING,
         destroyTime: { type: DataTypes.DATE, field: 'destroy_time' }
-      }, { paranoid: true, deletedAt: 'destroyTime' });
+      }, { paranoid: true, deleted: 'destroyTime' });
 
       await ParanoidUser.sync({ force: true });
 
@@ -658,7 +658,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       const user1 = await user2.destroy();
       expect(user1.dataValues.destroyTime).to.be.ok;
-      expect(user1.dataValues.deletedAt).to.not.be.ok;
+      expect(user1.dataValues.deleted).to.not.be.ok;
       expect(user1.dataValues.destroy_time).to.not.be.ok;
       const user0 = await user1.restore();
       expect(user0.dataValues.destroyTime).to.not.be.ok;
@@ -672,7 +672,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     it('supports custom default value', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: DataTypes.STRING,
-        deletedAt: { type: DataTypes.DATE, defaultValue: new Date(0) }
+        deleted: { type: DataTypes.DATE, defaultValue: new Date(0) }
       }, { paranoid: true });
 
       await ParanoidUser.sync({ force: true });
@@ -683,10 +683,10 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       const user1 = await user2.destroy();
       const user0 = await user1.restore();
-      expect(user0.dataValues.deletedAt.toISOString()).to.equal(new Date(0).toISOString());
+      expect(user0.dataValues.deleted.toISOString()).to.equal(new Date(0).toISOString());
       const user = await ParanoidUser.findOne({ where: { username: 'username' } });
       expect(user).to.be.ok;
-      expect(user.deletedAt.toISOString()).to.equal(new Date(0).toISOString());
+      expect(user.deleted.toISOString()).to.equal(new Date(0).toISOString());
     });
   });
 });

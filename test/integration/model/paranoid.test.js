@@ -57,7 +57,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         name: {
           type: DataTypes.STRING
         },
-        deletedAt: {
+        deleted: {
           type: DataTypes.DATE,
           allowNull: true,
           field: 'deleted_at'
@@ -65,7 +65,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       }, {
         paranoid: true,
         timestamps: true,
-        deletedAt: 'deletedAt',
+        deleted: 'deleted',
         createdAt: false,
         updatedAt: false
       });
@@ -94,7 +94,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             data: {
               type: DataTypes.JSON
             },
-            deletedAt: {
+            deleted: {
               type: DataTypes.DATE,
               allowNull: true,
               field: 'deleted_at'
@@ -102,7 +102,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           }, {
             paranoid: true,
             timestamps: true,
-            deletedAt: 'deletedAt'
+            deleted: 'deleted'
           });
         });
 

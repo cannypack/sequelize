@@ -46,9 +46,9 @@ if (dialect === 'mysql') {
         expect(this.sequelize.getQueryInterface().queryGenerator.attributesToSQL(User2.rawAttributes)).to.deep.equal({ id: 'INTEGER NOT NULL auto_increment PRIMARY KEY', updatedAt: 'DATETIME NOT NULL', createdAt: 'DATETIME NOT NULL' });
       });
 
-      it('adds deletedAt if paranoid', function() {
+      it('adds deleted if paranoid', function() {
         const User = this.sequelize.define(`User${Support.rand()}`, {}, { paranoid: true });
-        expect(this.sequelize.getQueryInterface().queryGenerator.attributesToSQL(User.rawAttributes)).to.deep.equal({ id: 'INTEGER NOT NULL auto_increment PRIMARY KEY', deletedAt: 'DATETIME', updatedAt: 'DATETIME NOT NULL', createdAt: 'DATETIME NOT NULL' });
+        expect(this.sequelize.getQueryInterface().queryGenerator.attributesToSQL(User.rawAttributes)).to.deep.equal({ id: 'INTEGER NOT NULL auto_increment PRIMARY KEY', deleted: 'DATETIME', updatedAt: 'DATETIME NOT NULL', createdAt: 'DATETIME NOT NULL' });
       });
 
       it('underscores timestamps if underscored', function() {

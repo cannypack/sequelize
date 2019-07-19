@@ -859,13 +859,13 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
     });
   });
 
-  describe('paranoid deletedAt non-null default value', () => {
-    it('should use defaultValue of deletedAt in paranoid clause and restore', async function() {
+  describe('paranoid deleted non-null default value', () => {
+    it('should use defaultValue of deleted in paranoid clause and restore', async function() {
       const epochObj = new Date(0),
         epoch = Number(epochObj);
       const User = this.sequelize.define('user', {
         username: DataTypes.STRING,
-        deletedAt: {
+        deleted: {
           type: DataTypes.DATE,
           defaultValue: epochObj
         }
@@ -875,7 +875,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
 
       await this.sequelize.sync({ force: true });
       const user = await User.create({ username: 'user1' });
-      expect(Number(user.deletedAt)).to.equal(epoch);
+      expect(Number(user.deleted)).to.equal(epoch);
 
       const user0 = await User.findOne({
         where: {
@@ -884,15 +884,15 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       });
 
       expect(user0).to.exist;
-      expect(Number(user0.deletedAt)).to.equal(epoch);
+      expect(Number(user0.deleted)).to.equal(epoch);
       const destroyedUser = await user0.destroy();
-      expect(destroyedUser.deletedAt).to.exist;
-      expect(Number(destroyedUser.deletedAt)).not.to.equal(epoch);
+      expect(destroyedUser.deleted).to.exist;
+      expect(Number(destroyedUser.deleted)).not.to.equal(epoch);
       const fetchedDestroyedUser = await User.findByPk(destroyedUser.id, { paranoid: false });
-      expect(fetchedDestroyedUser.deletedAt).to.exist;
-      expect(Number(fetchedDestroyedUser.deletedAt)).not.to.equal(epoch);
+      expect(fetchedDestroyedUser.deleted).to.exist;
+      expect(Number(fetchedDestroyedUser.deleted)).not.to.equal(epoch);
       const restoredUser = await fetchedDestroyedUser.restore();
-      expect(Number(restoredUser.deletedAt)).to.equal(epoch);
+      expect(Number(restoredUser.deleted)).to.equal(epoch);
 
       await User.destroy({ where: {
         username: 'user1'
@@ -904,7 +904,7 @@ describe(Support.getTestDialectTeaser('Sequelize'), () => {
       const nonDeletedUsers = await User.findAll();
       expect(nonDeletedUsers.length).to.equal(1);
       nonDeletedUsers.forEach(u => {
-        expect(Number(u.deletedAt)).to.equal(epoch);
+        expect(Number(u.deleted)).to.equal(epoch);
       });
     });
   });

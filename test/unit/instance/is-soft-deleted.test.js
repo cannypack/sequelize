@@ -15,7 +15,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         name: DataTypes.STRING,
         birthdate: DataTypes.DATE,
         meta: DataTypes.JSON,
-        deletedAt: {
+        deleted: {
           type: Sequelize.DATE
         }
       });
@@ -24,7 +24,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
         name: DataTypes.STRING,
         birthdate: DataTypes.DATE,
         meta: DataTypes.JSON,
-        deletedAt: {
+        deleted: {
           type: Sequelize.DATE
         }
       }, {
@@ -59,12 +59,12 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
     });
 
     it('should return false if the soft-delete property is the same as the default value', function() {
-      this.paranoidUser.setDataValue('deletedAt', null);
+      this.paranoidUser.setDataValue('deleted', null);
       expect(this.paranoidUser.isSoftDeleted()).to.be.false;
     });
 
     it('should return true if the soft-delete property is set', function() {
-      this.paranoidUser.setDataValue('deletedAt', moment().subtract(5, 'days').format());
+      this.paranoidUser.setDataValue('deleted', moment().subtract(5, 'days').format());
       expect(this.paranoidUser.isSoftDeleted()).to.be.true;
     });
   });

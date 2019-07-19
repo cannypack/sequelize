@@ -804,7 +804,7 @@ export interface TruncateOptions<TAttributes = any> extends Logging, Transaction
   limit?: number;
 
   /**
-   * Delete instead of setting deletedAt to current timestamp (only applicable if `paranoid` is enabled)
+   * Delete instead of setting deleted to current timestamp (only applicable if `paranoid` is enabled)
    */
   force?: boolean;
 
@@ -986,7 +986,7 @@ export interface SaveOptions<TAttributes = any> extends Logging, Transactionable
    * @default true
    */
   validate?: boolean;
-  
+
   /**
    * A flag that defines if null values should be passed as values or not.
    *
@@ -1115,7 +1115,7 @@ export interface ModelValidateOptions {
    * check the value is one of these
    */
   isIn?: ReadonlyArray<readonly any[]> | { msg: string; args: ReadonlyArray<readonly any[]> };
-  
+
   /**
    * don't allow specific substrings
    */
@@ -1397,7 +1397,7 @@ export interface ModelOptions<M extends Model = Model> {
   timestamps?: boolean;
 
   /**
-   * Calling destroy will not delete the model, but instead set a deletedAt timestamp if this is true. Needs
+   * Calling destroy will not delete the model, but instead set a deleted timestamp if this is true. Needs
    * timestamps=true to work. Default false.
    */
   paranoid?: boolean;
@@ -1441,10 +1441,10 @@ export interface ModelOptions<M extends Model = Model> {
   createdAt?: string | boolean;
 
   /**
-   * Override the name of the deletedAt column if a string is provided, or disable it if false. Timestamps
+   * Override the name of the deleted column if a string is provided, or disable it if false. Timestamps
    * must be true. Not affected by underscored setting.
    */
-  deletedAt?: string | boolean;
+  deleted?: string | boolean;
 
   /**
    * Override the name of the updatedAt column if a string is provided, or disable it if false. Timestamps
@@ -2080,7 +2080,7 @@ export abstract class Model<TModelAttributes extends {} = any, TCreationAttribut
   ): Promise<void>;
 
   /**
-   * Delete multiple instances, or set their deletedAt timestamp to the current time if `paranoid` is enabled.
+   * Delete multiple instances, or set their deleted timestamp to the current time if `paranoid` is enabled.
    *
    * @return Promise<number> The number of destroyed rows
    */
@@ -2773,7 +2773,7 @@ export abstract class Model<TModelAttributes extends {} = any, TCreationAttribut
 
   /**
    * Destroy the row corresponding to this instance. Depending on your setting for paranoid, the row will
-   * either be completely deleted, or have its deletedAt timestamp set to the current time.
+   * either be completely deleted, or have its deleted timestamp set to the current time.
    */
   public destroy(options?: InstanceDestroyOptions): Promise<void>;
 
@@ -2850,7 +2850,7 @@ export abstract class Model<TModelAttributes extends {} = any, TCreationAttribut
 
   /**
    * Helper method to determine if a instance is "soft deleted". This is
-   * particularly useful if the implementer renamed the deletedAt attribute to
+   * particularly useful if the implementer renamed the deleted attribute to
    * something different. This method requires paranoid to be enabled.
    *
    * Throws an error if paranoid is not enabled.

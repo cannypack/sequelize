@@ -10,9 +10,9 @@ const chai = require('chai'),
 describe(Support.getTestDialectTeaser('Include'), () => {
   describe('findOne', () => {
     it('should include a non required model, with conditions and two includes N:M 1:M', async function() {
-      const A = this.sequelize.define('A', { name: DataTypes.STRING(40) }, { paranoid: true }), 
-        B = this.sequelize.define('B', { name: DataTypes.STRING(40) }, { paranoid: true }), 
-        C = this.sequelize.define('C', { name: DataTypes.STRING(40) }, { paranoid: true }), 
+      const A = this.sequelize.define('A', { name: DataTypes.STRING(40) }, { paranoid: true }),
+        B = this.sequelize.define('B', { name: DataTypes.STRING(40) }, { paranoid: true }),
+        C = this.sequelize.define('C', { name: DataTypes.STRING(40) }, { paranoid: true }),
         D = this.sequelize.define('D', { name: DataTypes.STRING(40) }, { paranoid: true });
 
       // Associations
@@ -66,7 +66,7 @@ describe(Support.getTestDialectTeaser('Include'), () => {
     it('should include a model with a where condition but no required', async function() {
       const User = this.sequelize.define('User', {}, { paranoid: false }),
         Task = this.sequelize.define('Task', {
-          deletedAt: {
+          deleted: {
             type: DataTypes.DATE
           }
         }, { paranoid: false });
@@ -81,14 +81,14 @@ describe(Support.getTestDialectTeaser('Include'), () => {
       const user0 = await User.create();
 
       await Task.bulkCreate([
-        { userId: user0.get('id'), deletedAt: new Date() },
-        { userId: user0.get('id'), deletedAt: new Date() },
-        { userId: user0.get('id'), deletedAt: new Date() }
+        { userId: user0.get('id'), deleted: new Date() },
+        { userId: user0.get('id'), deleted: new Date() },
+        { userId: user0.get('id'), deleted: new Date() }
       ]);
 
       const user = await User.findOne({
         include: [
-          { model: Task, where: { deletedAt: null }, required: false }
+          { model: Task, where: { deleted: null }, required: false }
         ]
       });
 

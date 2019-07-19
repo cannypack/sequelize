@@ -462,14 +462,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       }
 
       if (dialect.match(/^postgres/)) {
-        it('works when deletedAt is Infinity and part of primary key', async function() {
+        it('works when deleted is Infinity and part of primary key', async function() {
           const User = this.sequelize.define('User', {
             name: {
               type: DataTypes.STRING,
               primaryKey: true
             },
             address: DataTypes.STRING,
-            deletedAt: {
+            deleted: {
               type: DataTypes.DATE,
               primaryKey: true,
               allowNull: false,
@@ -483,10 +483,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
           await Promise.all([
             User.create({ name: 'user1' }),
-            User.create({ name: 'user2', deletedAt: Infinity }),
+            User.create({ name: 'user2', deleted: Infinity }),
 
             // this record is soft deleted
-            User.create({ name: 'user3', deletedAt: -Infinity })
+            User.create({ name: 'user3', deleted: -Infinity })
           ]);
 
           await User.upsert({ name: 'user1', address: 'address' });

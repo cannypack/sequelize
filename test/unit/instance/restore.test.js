@@ -17,7 +17,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
           primaryKey: true,
           autoIncrement: true
         },
-        deletedAt: {
+        deleted: {
           type: Sequelize.DATE
         }
       }, {

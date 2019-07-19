@@ -530,7 +530,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       it('should work with paranoid instance.destroy()', async function() {
         const User = this.sequelize.define('User', {
-          deletedAt: {
+          deleted: {
             type: DataTypes.DATE,
             field: 'deleted_at'
           }
@@ -549,7 +549,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       it('should work with paranoid Model.destroy()', async function() {
         const User = this.sequelize.define('User', {
-          deletedAt: {
+          deleted: {
             type: DataTypes.DATE,
             field: 'deleted_at'
           }

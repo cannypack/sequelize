@@ -27,7 +27,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
     }
 
-    it('does not set the deletedAt date in subsequent destroys if dao is paranoid', async function() {
+    it('does not set the deleted date in subsequent destroys if dao is paranoid', async function() {
       const UserDestroy = this.sequelize.define('UserDestroy', {
         name: Support.Sequelize.STRING,
         bio: Support.Sequelize.TEXT
@@ -37,17 +37,17 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       const user = await UserDestroy.create({ name: 'hallo', bio: 'welt' });
       await user.destroy();
       await user.reload({ paranoid: false });
-      const deletedAt = user.deletedAt;
+      const deleted = user.deleted;
 
       await user.destroy();
       await user.reload({ paranoid: false });
-      expect(user.deletedAt).to.eql(deletedAt);
+      expect(user.deleted).to.eql(deleted);
     });
 
-    it('does not update deletedAt with custom default in subsequent destroys', async function() {
+    it('does not update deleted with custom default in subsequent destroys', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: Support.Sequelize.STRING,
-        deletedAt: { type: Support.Sequelize.DATE, defaultValue: new Date(0) }
+        deleted: { type: Support.Sequelize.DATE, defaultValue: new Date(0) }
       }, { paranoid: true });
 
       await ParanoidUser.sync({ force: true });
@@ -57,14 +57,14 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       const user0 = await user1.destroy();
-      const deletedAt = user0.deletedAt;
-      expect(deletedAt).to.be.ok;
-      expect(deletedAt.getTime()).to.be.ok;
+      const deleted = user0.deleted;
+      expect(deleted).to.be.ok;
+      expect(deleted.getTime()).to.be.ok;
 
       const user = await user0.destroy();
       expect(user).to.be.ok;
-      expect(user.deletedAt).to.be.ok;
-      expect(user.deletedAt.toISOString()).to.equal(deletedAt.toISOString());
+      expect(user.deleted).to.be.ok;
+      expect(user.deleted.toISOString()).to.equal(deleted.toISOString());
     });
 
     it('deletes a record from the database if dao is not paranoid', async function() {
@@ -94,12 +94,12 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       const user1 = await user2.destroy();
-      expect(user1.deletedAt).to.be.ok;
-      const deletedAt = user1.deletedAt;
+      expect(user1.deleted).to.be.ok;
+      const deleted = user1.deleted;
       user1.username = 'foo';
       const user0 = await user1.save();
       expect(user0.username).to.equal('foo');
-      expect(user0.deletedAt).to.equal(deletedAt, 'should not update deletedAt');
+      expect(user0.deleted).to.equal(deleted, 'should not update deleted');
 
       const user = await ParanoidUser.findOne({
         paranoid: false,
@@ -109,14 +109,14 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       expect(user).to.be.ok;
-      expect(user.deletedAt).to.be.ok;
+      expect(user.deleted).to.be.ok;
     });
 
-    it('supports custom deletedAt field', async function() {
+    it('supports custom deleted field', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: Support.Sequelize.STRING,
         destroyTime: Support.Sequelize.DATE
-      }, { paranoid: true, deletedAt: 'destroyTime' });
+      }, { paranoid: true, deleted: 'destroyTime' });
 
       await ParanoidUser.sync({ force: true });
 
@@ -126,7 +126,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       const user0 = await user1.destroy();
       expect(user0.destroyTime).to.be.ok;
-      expect(user0.deletedAt).to.not.be.ok;
+      expect(user0.deleted).to.not.be.ok;
 
       const user = await ParanoidUser.findOne({
         paranoid: false,
@@ -137,13 +137,13 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
 
       expect(user).to.be.ok;
       expect(user.destroyTime).to.be.ok;
-      expect(user.deletedAt).to.not.be.ok;
+      expect(user.deleted).to.not.be.ok;
     });
 
-    it('supports custom deletedAt database column', async function() {
+    it('supports custom deleted database column', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: Support.Sequelize.STRING,
-        deletedAt: { type: Support.Sequelize.DATE, field: 'deleted_at' }
+        deleted: { type: Support.Sequelize.DATE, field: 'deleted_at' }
       }, { paranoid: true });
 
       await ParanoidUser.sync({ force: true });
@@ -153,7 +153,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       const user0 = await user1.destroy();
-      expect(user0.dataValues.deletedAt).to.be.ok;
+      expect(user0.dataValues.deleted).to.be.ok;
       expect(user0.dataValues.deleted_at).to.not.be.ok;
 
       const user = await ParanoidUser.findOne({
@@ -164,15 +164,15 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       expect(user).to.be.ok;
-      expect(user.deletedAt).to.be.ok;
+      expect(user.deleted).to.be.ok;
       expect(user.deleted_at).to.not.be.ok;
     });
 
-    it('supports custom deletedAt field and database column', async function() {
+    it('supports custom deleted field and database column', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: Support.Sequelize.STRING,
         destroyTime: { type: Support.Sequelize.DATE, field: 'destroy_time' }
-      }, { paranoid: true, deletedAt: 'destroyTime' });
+      }, { paranoid: true, deleted: 'destroyTime' });
 
       await ParanoidUser.sync({ force: true });
 
@@ -210,8 +210,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       user4.username = 'foo';
       const user3 = await user4.destroy();
       expect(user3.username).to.equal('foo');
-      expect(user3.deletedAt).to.be.ok;
-      const deletedAt = user3.deletedAt;
+      expect(user3.deleted).to.be.ok;
+      const deleted = user3.deleted;
 
       const user2 = await ParanoidUser.findOne({
         paranoid: false,
@@ -221,16 +221,16 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       expect(user2).to.be.ok;
-      expect(moment.utc(user2.deletedAt).startOf('second').toISOString())
-        .to.equal(moment.utc(deletedAt).startOf('second').toISOString());
+      expect(moment.utc(user2.deleted).startOf('second').toISOString())
+        .to.equal(moment.utc(deleted).startOf('second').toISOString());
       expect(user2.username).to.equal('foo');
       const user1 = user2;
       // update model and delete again
       user1.username = 'bar';
       const user0 = await user1.destroy();
-      expect(moment.utc(user0.deletedAt).startOf('second').toISOString())
-        .to.equal(moment.utc(deletedAt).startOf('second').toISOString(),
-          'should not updated deletedAt when destroying multiple times');
+      expect(moment.utc(user0.deleted).startOf('second').toISOString())
+        .to.equal(moment.utc(deleted).startOf('second').toISOString(),
+          'should not updated deleted when destroying multiple times');
 
       const user = await ParanoidUser.findOne({
         paranoid: false,
@@ -240,8 +240,8 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       });
 
       expect(user).to.be.ok;
-      expect(moment.utc(user.deletedAt).startOf('second').toISOString())
-        .to.equal(moment.utc(deletedAt).startOf('second').toISOString());
+      expect(moment.utc(user.deleted).startOf('second').toISOString())
+        .to.equal(moment.utc(deleted).startOf('second').toISOString());
       expect(user.username).to.equal('bar');
     });
 
@@ -360,7 +360,7 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
               type: Support.Sequelize.DATE,
               primaryKey: true
             },
-            deletedAt: {
+            deleted: {
               type: Support.Sequelize.DATE,
               defaultValue: Infinity
             }

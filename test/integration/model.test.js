@@ -14,7 +14,7 @@ const chai = require('chai'),
   Op = Sequelize.Op,
   semver = require('semver'),
   pMap = require('p-map');
-  
+
 describe(Support.getTestDialectTeaser('Model'), () => {
   let isMySQL8;
 
@@ -150,7 +150,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(defaultFunction.callCount).to.equal(2);
     });
 
-    it('should throw `TypeError` when value for updatedAt, createdAt, or deletedAt is neither string nor boolean', async function() {
+    it('should throw `TypeError` when value for updatedAt, createdAt, or deleted is neither string nor boolean', async function() {
       const modelName = 'UserCol';
       const attributes = { aNumber: Sequelize.INTEGER };
 
@@ -161,11 +161,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         this.sequelize.define(modelName, attributes, { timestamps: true, createdAt: 100 });
       }).to.throw(Error, 'Value for "createdAt" option must be a string or a boolean, got number');
       expect(() => {
-        this.sequelize.define(modelName, attributes, { timestamps: true, deletedAt: () => {} });
-      }).to.throw(Error, 'Value for "deletedAt" option must be a string or a boolean, got function');
+        this.sequelize.define(modelName, attributes, { timestamps: true, deleted: () => {} });
+      }).to.throw(Error, 'Value for "deleted" option must be a string or a boolean, got function');
     });
 
-    it('should allow me to use `true` as a value for updatedAt, createdAt, and deletedAt fields', async function() {
+    it('should allow me to use `true` as a value for updatedAt, createdAt, and deleted fields', async function() {
       const UserTable = this.sequelize.define(
         'UserCol',
         {
@@ -175,7 +175,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           timestamps: true,
           updatedAt: true,
           createdAt: true,
-          deletedAt: true,
+          deleted: true,
           paranoid: true
         }
       );
@@ -187,17 +187,17 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(user.createdAt).to.exist;
       await user.destroy();
       await user.reload({ paranoid: false });
-      expect(user.deletedAt).to.exist;
+      expect(user.deleted).to.exist;
     });
 
-    it('should allow me to override updatedAt, createdAt, and deletedAt fields', async function() {
+    it('should allow me to override updatedAt, createdAt, and deleted fields', async function() {
       const UserTable = this.sequelize.define('UserCol', {
         aNumber: Sequelize.INTEGER
       }, {
         timestamps: true,
         updatedAt: 'updatedOn',
         createdAt: 'dateCreated',
-        deletedAt: 'deletedAtThisTime',
+        deleted: 'deletedThisTime',
         paranoid: true
       });
 
@@ -207,7 +207,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(user.dateCreated).to.exist;
       await user.destroy();
       await user.reload({ paranoid: false });
-      expect(user.deletedAtThisTime).to.exist;
+      expect(user.deletedThisTime).to.exist;
     });
 
     it('should allow me to disable some of the timestamp fields', async function() {
@@ -217,7 +217,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         timestamps: true,
         updatedAt: false,
         createdAt: false,
-        deletedAt: 'deletedAtThisTime',
+        deleted: 'deletedThisTime',
         paranoid: true
       });
 
@@ -230,7 +230,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(user.updatedAt).not.to.exist;
       await user.destroy();
       await user.reload({ paranoid: false });
-      expect(user.deletedAtThisTime).to.exist;
+      expect(user.deletedThisTime).to.exist;
     });
 
     it('returns proper defaultValues after save when setter is set', async function() {
@@ -382,7 +382,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         if (!isMySQL8) {
           return;
         }
-  
+
         const indices = [{
           name: 'a_b_uniq',
           unique: true,
@@ -407,7 +407,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           indexes: indices,
           engine: 'MyISAM'
         });
-  
+
         try {
           await this.sequelize.sync();
           expect.fail();
@@ -420,7 +420,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         if (!isMySQL8) {
           return;
         }
-  
+
         const indices = [{
           name: 'a_b_uniq',
           unique: true,
@@ -1468,7 +1468,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(await UserProject.findAll()).to.have.lengthOf(0);
     });
 
-    it('sets deletedAt to the current timestamp if paranoid is true', async function() {
+    it('sets deleted to the current timestamp if paranoid is true', async function() {
       const ParanoidUser = this.sequelize.define('ParanoidUser', {
         username: Sequelize.STRING,
         secretValue: Sequelize.STRING,
@@ -1494,7 +1494,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       const queryGenerator = this.sequelize.queryInterface.queryGenerator;
       const qi = queryGenerator.quoteIdentifier.bind(queryGenerator);
-      const query = `SELECT * FROM ${qi('ParanoidUsers')} WHERE ${qi('deletedAt')} IS NOT NULL ORDER BY ${qi('id')}`;
+      const query = `SELECT * FROM ${qi('ParanoidUsers')} WHERE ${qi('deleted')} IS NOT NULL ORDER BY ${qi('id')}`;
       [users] = await this.sequelize.query(query);
 
       expect(users[0].username).to.equal('Peter');
@@ -1502,11 +1502,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       const formatDate = val => moment(new Date(val)).utc().format('YYYY-MM-DD h:mm');
 
-      expect(formatDate(users[0].deletedAt)).to.equal(date);
-      expect(formatDate(users[1].deletedAt)).to.equal(date);
+      expect(formatDate(users[0].deleted)).to.equal(date);
+      expect(formatDate(users[1].deleted)).to.equal(date);
     });
 
-    it('does not set deletedAt for previously destroyed instances if paranoid is true', async function() {
+    it('does not set deleted for previously destroyed instances if paranoid is true', async function() {
       const User = this.sequelize.define('UserCol', {
         secretValue: Sequelize.STRING,
         username: Sequelize.STRING
@@ -1521,10 +1521,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const user = await User.findByPk(1);
       await user.destroy();
       await user.reload({ paranoid: false });
-      const deletedAt = user.deletedAt;
+      const deleted = user.deleted;
       await User.destroy({ where: { secretValue: '42' } });
       await user.reload({ paranoid: false });
-      expect(user.deletedAt).to.eql(deletedAt);
+      expect(user.deleted).to.eql(deleted);
     });
 
     describe("can't find records marked as deleted with paranoid being true", () => {
@@ -2529,7 +2529,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(users[0].username).to.be.equal('luke');
     });
 
-    it('should not overwrite a specified deletedAt by setting paranoid: false', async function() {
+    it('should not overwrite a specified deleted by setting paranoid: false', async function() {
       let tableName = '';
       if (this.User.name) {
         tableName = `${this.sequelize.queryInterface.queryGenerator.quoteIdentifier(this.User.name)}.`;
@@ -2537,7 +2537,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       const users = await this.User.findAll({
         paranoid: false,
-        where: this.sequelize.literal(`${tableName + this.sequelize.queryInterface.queryGenerator.quoteIdentifier('deletedAt')} IS NOT NULL `),
+        where: this.sequelize.literal(`${tableName + this.sequelize.queryInterface.queryGenerator.quoteIdentifier('deleted')} IS NOT NULL `),
         include: [
           { model: this.Project }
         ]
@@ -2547,14 +2547,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(users[0].username).to.be.equal('leia');
     });
 
-    it('should not overwrite a specified deletedAt (complex query) by setting paranoid: false', async function() {
+    it('should not overwrite a specified deleted (complex query) by setting paranoid: false', async function() {
       const res = await this.User.findAll({
         paranoid: false,
         where: [
           this.sequelize.or({ username: 'leia' }, { username: 'luke' }),
           this.sequelize.and(
             { id: [1, 2, 3] },
-            this.sequelize.or({ deletedAt: null }, { deletedAt: { [Op.gt]: new Date(0) } })
+            this.sequelize.or({ deleted: null }, { deleted: { [Op.gt]: new Date(0) } })
           )
         ]
       });

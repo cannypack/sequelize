@@ -1,6 +1,6 @@
 # Paranoid
 
-Sequelize supports the concept of *paranoid* tables. A *paranoid* table is one that, when told to delete a record, it will not truly delete it. Instead, a special column called `deletedAt` will have its value set to the timestamp of that deletion request.
+Sequelize supports the concept of *paranoid* tables. A *paranoid* table is one that, when told to delete a record, it will not truly delete it. Instead, a special column called `deleted` will have its value set to the timestamp of that deletion request.
 
 This means that paranoid tables perform a *soft-deletion* of records, instead of a *hard-deletion*.
 
@@ -8,7 +8,7 @@ This means that paranoid tables perform a *soft-deletion* of records, instead of
 
 To make a model paranoid, you must pass the `paranoid: true` option to the model definition. Paranoid requires timestamps to work (i.e. it won't work if you also pass `timestamps: false`).
 
-You can also change the default column name (which is `deletedAt`) to something else.
+You can also change the default column name (which is `deleted`) to something else.
 
 ```js
 class Post extends Model {}
@@ -16,8 +16,8 @@ Post.init({ /* attributes here */ }, {
   sequelize,
   paranoid: true,
 
-  // If you want to give a custom name to the deletedAt column
-  deletedAt: 'destroyTime'
+  // If you want to give a custom name to the deleted column
+  deleted: 'destroyTime'
 });
 ```
 
@@ -31,7 +31,7 @@ await Post.destroy({
     id: 1
   }
 });
-// UPDATE "posts" SET "deletedAt"=[timestamp] WHERE "deletedAt" IS NULL AND "id" = 1
+// UPDATE "posts" SET "deleted"=[timestamp] WHERE "deleted" IS NULL AND "id" = 1
 ```
 
 If you really want a hard-deletion and your model is paranoid, you can force it using the `force: true` option:
@@ -51,7 +51,7 @@ The above examples used the static `destroy` method as an example (`Post.destroy
 ```js
 const post = await Post.create({ title: 'test' });
 console.log(post instanceof Post); // true
-await post.destroy(); // Would just set the `deletedAt` flag
+await post.destroy(); // Would just set the `deleted` flag
 await post.destroy({ force: true }); // Would really delete the record
 ```
 
