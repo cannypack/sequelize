@@ -3,12 +3,12 @@
 const chai = require('chai'),
   expect = chai.expect,
   Support = require('../../support'),
-  DataTypes = require('../../../../lib/data-types'),
+  DataTypes = require('sequelize/lib/data-types'),
   dialect = Support.getTestDialect(),
   _ = require('lodash'),
   moment = require('moment'),
-  Op = require('../../../../lib/operators'),
-  QueryGenerator = require('../../../../lib/dialects/sqlite/query-generator');
+  Op = require('sequelize/lib/operators'),
+  QueryGenerator = require('sequelize/lib/dialects/sqlite/query-generator');
 
 if (dialect === 'sqlite') {
   describe('[SQLITE Specific] QueryGenerator', () => {
@@ -187,7 +187,7 @@ if (dialect === 'sqlite') {
         }, {
           arguments: ['foo', { attributes: [['count(*)', 'count']] }],
           expectation: 'SELECT count(*) AS `count` FROM `foo`;',
-          context: QueryGenerator
+          context: { options: {  attributeBehavior: 'unsafe-legacy' } }
         }, {
           arguments: ['myTable', { order: ['id'] }],
           expectation: 'SELECT * FROM `myTable` ORDER BY `id`;',

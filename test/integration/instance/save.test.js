@@ -2,9 +2,9 @@
 
 const chai = require('chai'),
   expect = chai.expect,
-  Sequelize = require('../../../index'),
+  Sequelize = require('sequelize'),
   Support = require('../support'),
-  DataTypes = require('../../../lib/data-types'),
+  DataTypes = require('sequelize/lib/data-types'),
   sinon = require('sinon'),
   current = Support.sequelize;
 
@@ -399,6 +399,14 @@ describe(Support.getTestDialectTeaser('Instance'), () => {
       await user.save();
       const userAfterUpdate = await this.User.findByPk(user.id);
       expect(userAfterUpdate.username).to.equal('$SEQUELIZE');
+    });
+
+    it('updates with function that contains multiple escaped dollar symbols', async function() {
+      const user = await this.User.create({});
+      user.username = this.sequelize.fn('upper', '$sequelize and $sequelize2 and some money $42.69');
+      await user.save();
+      const userAfterUpdate = await this.User.findByPk(user.id);
+      expect(userAfterUpdate.username).to.equal('$SEQUELIZE AND $SEQUELIZE2 AND SOME MONEY $42.69');
     });
 
     describe('without timestamps option', () => {

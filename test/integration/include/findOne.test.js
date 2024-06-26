@@ -3,8 +3,8 @@
 const chai = require('chai'),
   expect = chai.expect,
   Support = require('../support'),
-  Sequelize = require('../../../index'),
-  DataTypes = require('../../../lib/data-types'),
+  Sequelize = require('sequelize'),
+  DataTypes = require('sequelize/lib/data-types'),
   _ = require('lodash');
 
 describe(Support.getTestDialectTeaser('Include'), () => {

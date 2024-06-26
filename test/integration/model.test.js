@@ -1,12 +1,12 @@
 'use strict';
 
 const chai = require('chai'),
-  Sequelize = require('../../index'),
+  Sequelize = require('sequelize'),
   expect = chai.expect,
   Support = require('./support'),
-  DataTypes = require('../../lib/data-types'),
+  DataTypes = require('sequelize/lib/data-types'),
   dialect = Support.getTestDialect(),
-  errors = require('../../lib/errors'),
+  errors = require('sequelize/lib/errors'),
   sinon = require('sinon'),
   _ = require('lodash'),
   moment = require('moment'),
@@ -239,7 +239,8 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           title: {
             type: Sequelize.STRING(50),
             allowNull: false,
-            defaultValue: ''
+            // Oracle dialect doesn't support empty string in a non-null column
+            defaultValue: dialect === 'oracle' ? 'A' : ''
           }
         }, {
           setterMethods: {
@@ -250,7 +251,11 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await Task.sync({ force: true });
       const record = await Task.build().save();
       expect(record.title).to.be.a('string');
-      expect(record.title).to.equal('');
+      if (dialect === 'oracle') {
+        expect(record.title).to.equal('A');
+      } else {
+        expect(record.title).to.equal('');
+      }
       expect(titleSetter.notCalled).to.be.ok; // The setter method should not be invoked for default values
     });
 
@@ -466,7 +471,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         ]
       }];
 
-      if (dialect !== 'mssql') {
+      if (dialect !== 'mssql' && dialect !== 'db2') {
         indices.push({
           type: 'FULLTEXT',
           fields: ['fieldC'],
@@ -507,6 +512,13 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(idx2.fields).to.deep.equal([
           { attribute: 'fieldC', length: undefined, order: undefined }
         ]);
+      } else if (dialect === 'db2') {
+        idx1 = args[1];
+
+        expect(idx1.fields).to.deep.equal([
+          { attribute: 'fieldB', length: undefined, order: 'ASC', collate: undefined },
+          { attribute: 'fieldA', length: undefined, order: 'DESC', collate: undefined }
+        ]);
       } else if (dialect === 'mssql') {
         idx1 = args[0];
 
@@ -533,6 +545,24 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         expect(idx3.fields).to.deep.equal([
           { attribute: 'fieldD', length: undefined, order: undefined, collate: undefined }
         ]);
+      } else if (dialect === 'oracle') {
+        primary = args[0];
+        idx1 = args[1];
+        idx2 = args[2];
+        idx3 = args[3];
+
+        expect(idx1.fields).to.deep.equal([
+          { attribute: 'fieldB', length: undefined, order: 'ASC', collate: undefined },
+          { attribute: 'fieldA', length: undefined, order: 'ASC', collate: undefined }
+        ]);
+
+        expect(idx2.fields).to.deep.equal([
+          { attribute: 'fieldC', length: undefined, order: 'ASC', collate: undefined }
+        ]);
+
+        expect(idx3.fields).to.deep.equal([
+          { attribute: 'fieldD', length: undefined, order: 'ASC', collate: undefined }
+        ]);
       } else {
         // And finally mysql returns the primary first, and then the rest in the order they were defined
         primary = args[0];
@@ -557,7 +587,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(idx1.name).to.equal('a_b_uniq');
       expect(idx1.unique).to.be.ok;
 
-      if (dialect !== 'mssql') {
+      if (dialect !== 'mssql' && dialect !== 'db2') {
         expect(idx2.name).to.equal('models_field_c');
         expect(idx2.unique).not.to.be.ok;
       }
@@ -982,7 +1012,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         fields: ['secretValue'],
         logging(sql) {
           test = true;
-          if (dialect === 'mssql') {
+          if (['mssql', 'oracle'].includes(dialect)) {
             expect(sql).to.not.contain('createdAt');
           } else {
             expect(sql).to.match(/UPDATE\s+[`"]+User1s[`"]+\s+SET\s+[`"]+secretValue[`"]=(\$1|\?),[`"]+updatedAt[`"]+=(\$2|\?)\s+WHERE [`"]+id[`"]+\s=\s(\$3|\?)/);
@@ -1620,13 +1650,16 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(await User.findOne({ where: { username: 'Bob' } })).to.be.null;
       const tobi = await User.findOne({ where: { username: 'Tobi' } });
       await tobi.destroy();
-      let result = await this.sequelize.query('SELECT * FROM paranoidusers WHERE username=\'Tobi\'', { plain: true });
+      let sql = ['db2', 'oracle'].includes(dialect) ? 'SELECT * FROM "paranoidusers" WHERE "username"=\'Tobi\'' : 'SELECT * FROM paranoidusers WHERE username=\'Tobi\'';
+      let result = await this.sequelize.query(sql, { plain: true });
       expect(result.username).to.equal('Tobi');
       await User.destroy({ where: { username: 'Tony' } });
-      result = await this.sequelize.query('SELECT * FROM paranoidusers WHERE username=\'Tony\'', { plain: true });
+      sql = ['db2', 'oracle'].includes(dialect) ? 'SELECT * FROM "paranoidusers" WHERE "username"=\'Tony\'' : 'SELECT * FROM paranoidusers WHERE username=\'Tony\'';
+      result = await this.sequelize.query(sql, { plain: true });
       expect(result.username).to.equal('Tony');
       await User.destroy({ where: { username: ['Tony', 'Max'] }, force: true });
-      const [users] = await this.sequelize.query('SELECT * FROM paranoidusers', { raw: true });
+      sql = ['db2', 'oracle'].includes(dialect) ? 'SELECT * FROM "paranoidusers"' : 'SELECT * FROM paranoidusers';
+      const [users] = await this.sequelize.query(sql, { raw: true });
       expect(users).to.have.length(1);
       expect(users[0].username).to.equal('Tobi');
     });
@@ -1803,7 +1836,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       expect(count.find(i => i.data === 'B')).to.deep.equal({ data: 'B', count: 1 });
     });
 
-    if (dialect !== 'mssql') {
+    if (!['mssql', 'db2', 'oracle'].includes(dialect)) {
       describe('aggregate', () => {
         it('allows grouping by aliased attribute', async function() {
           await this.User.aggregate('id', 'count', {
@@ -2087,8 +2120,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const expectedLengths = {
         mssql: 2,
         postgres: 2,
+        db2: 10,
         mariadb: 3,
         mysql: 1,
+        oracle: 2,
         sqlite: 1
       };
       expect(schemas).to.have.length(expectedLengths[dialect]);
@@ -2139,7 +2174,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             test++;
             expect(sql).to.not.contain('special');
           }
-          else if (['mysql', 'mssql', 'mariadb'].includes(dialect)) {
+          else if (['mysql', 'mssql', 'mariadb', 'db2', 'oracle'].includes(dialect)) {
             test++;
             expect(sql).to.not.contain('special');
           }
@@ -2158,7 +2193,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
             test++;
             expect(sql).to.contain('special');
           }
-          else if (['mysql', 'mssql', 'mariadb'].includes(dialect)) {
+          else if (['mysql', 'mssql', 'mariadb', 'db2', 'oracle'].includes(dialect)) {
             test++;
             expect(sql).to.contain('special');
           }
@@ -2184,7 +2219,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
 
       UserPub.hasMany(ItemPub, { foreignKeyConstraint: true });
 
-      if (['postgres', 'mssql', 'mariadb'].includes(dialect)) {
+      if (['postgres', 'mssql', 'db2', 'mariadb', 'oracle'].includes(dialect)) {
         await Support.dropTestSchemas(this.sequelize);
         await this.sequelize.queryInterface.createSchema('prefix');
       }
@@ -2196,10 +2231,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
         force: true,
         logging: _.after(2, _.once(sql => {
           test = true;
-          if (dialect === 'postgres') {
+          if (dialect === 'postgres' || dialect === 'db2') {
             expect(sql).to.match(/REFERENCES\s+"prefix"\."UserPubs" \("id"\)/);
           } else if (dialect === 'mssql') {
             expect(sql).to.match(/REFERENCES\s+\[prefix\]\.\[UserPubs\] \(\[id\]\)/);
+          } else if (dialect === 'oracle') {
+            expect(sql).to.match(/REFERENCES\s+"prefix"."UserPubs" \("id"\)/);
           } else if (dialect === 'mariadb') {
             expect(sql).to.match(/REFERENCES\s+`prefix`\.`UserPubs` \(`id`\)/);
           } else {
@@ -2218,7 +2255,7 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await UserPublicSync.create({ age: 3 }, {
         logging: UserPublic => {
           logged++;
-          if (dialect === 'postgres') {
+          if (dialect === 'postgres' || dialect === 'db2') {
             expect(this.UserSpecialSync.getTableName().toString()).to.equal('"special"."UserSpecials"');
             expect(UserPublic).to.include('INSERT INTO "UserPublics"');
           } else if (dialect === 'sqlite') {
@@ -2230,6 +2267,9 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           } else if (dialect === 'mariadb') {
             expect(this.UserSpecialSync.getTableName().toString()).to.equal('`special`.`UserSpecials`');
             expect(UserPublic.indexOf('INSERT INTO `UserPublics`')).to.be.above(-1);
+          } else if (dialect === 'oracle') {
+            expect(this.UserSpecialSync.getTableName().toString()).to.equal('"special"."UserSpecials"');
+            expect(UserPublic.indexOf('INSERT INTO "UserPublics"')).to.be.above(-1);
           } else {
             expect(this.UserSpecialSync.getTableName().toString()).to.equal('`special.UserSpecials`');
             expect(UserPublic).to.include('INSERT INTO `UserPublics`');
@@ -2240,12 +2280,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       const UserSpecial = await this.UserSpecialSync.schema('special').create({ age: 3 }, {
         logging(UserSpecial) {
           logged++;
-          if (dialect === 'postgres') {
+          if (dialect === 'postgres' || dialect === 'db2') {
             expect(UserSpecial).to.include('INSERT INTO "special"."UserSpecials"');
           } else if (dialect === 'sqlite') {
             expect(UserSpecial).to.include('INSERT INTO `special.UserSpecials`');
           } else if (dialect === 'mssql') {
             expect(UserSpecial).to.include('INSERT INTO [special].[UserSpecials]');
+          } else if (dialect === 'oracle') {
+            expect(UserSpecial).to.include('INSERT INTO "special"."UserSpecials"');
           } else if (dialect === 'mariadb') {
             expect(UserSpecial).to.include('INSERT INTO `special`.`UserSpecials`');
           } else {
@@ -2257,10 +2299,12 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       await UserSpecial.update({ age: 5 }, {
         logging(user) {
           logged++;
-          if (dialect === 'postgres') {
+          if (dialect === 'postgres' || dialect === 'db2') {
             expect(user).to.include('UPDATE "special"."UserSpecials"');
           } else if (dialect === 'mssql') {
             expect(user).to.include('UPDATE [special].[UserSpecials]');
+          } else if (dialect === 'oracle') {
+            expect(user).to.include('UPDATE "special"."UserSpecials"');
           } else if (dialect === 'mariadb') {
             expect(user).to.include('UPDATE `special`.`UserSpecials`');
           } else {
@@ -2295,19 +2339,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       Post.belongsTo(this.Author);
 
       // The posts table gets dropped in the before filter.
-      await Post.sync({ logging: _.once(sql => {
-        if (dialect === 'postgres') {
-          expect(sql).to.match(/"authorId" INTEGER REFERENCES "authors" \("id"\)/);
-        } else if (dialect === 'mysql' || dialect === 'mariadb') {
-          expect(sql).to.match(/FOREIGN KEY \(`authorId`\) REFERENCES `authors` \(`id`\)/);
-        } else if (dialect === 'mssql') {
-          expect(sql).to.match(/FOREIGN KEY \(\[authorId\]\) REFERENCES \[authors\] \(\[id\]\)/);
-        } else if (dialect === 'sqlite') {
-          expect(sql).to.match(/`authorId` INTEGER REFERENCES `authors` \(`id`\)/);
-        } else {
-          throw new Error('Undefined dialect!');
-        }
-      }) });
+      await Post.sync();
+
+      const foreignKeys = await this.sequelize.queryInterface.getForeignKeyReferencesForTable(Post.getTableName());
+
+      expect(foreignKeys.length).to.eq(1);
+      expect(foreignKeys[0].columnName).to.eq('authorId');
+      expect(foreignKeys[0].referencedTableName).to.eq('authors');
+      expect(foreignKeys[0].referencedColumnName).to.eq('id');
     });
 
     it('uses a table name as a string and references the author table', async function() {
@@ -2319,19 +2358,14 @@ describe(Support.getTestDialectTeaser('Model'), () => {
       Post.belongsTo(this.Author);
 
       // The posts table gets dropped in the before filter.
-      await Post.sync({ logging: _.once(sql => {
-        if (dialect === 'postgres') {
-          expect(sql).to.match(/"authorId" INTEGER REFERENCES "authors" \("id"\)/);
-        } else if (dialect === 'mysql' || dialect === 'mariadb') {
-          expect(sql).to.match(/FOREIGN KEY \(`authorId`\) REFERENCES `authors` \(`id`\)/);
-        } else if (dialect === 'sqlite') {
-          expect(sql).to.match(/`authorId` INTEGER REFERENCES `authors` \(`id`\)/);
-        } else if (dialect === 'mssql') {
-          expect(sql).to.match(/FOREIGN KEY \(\[authorId\]\) REFERENCES \[authors\] \(\[id\]\)/);
-        } else {
-          throw new Error('Undefined dialect!');
-        }
-      }) });
+      await Post.sync();
+
+      const foreignKeys = await this.sequelize.queryInterface.getForeignKeyReferencesForTable(Post.getTableName());
+
+      expect(foreignKeys.length).to.eq(1);
+      expect(foreignKeys[0].columnName).to.eq('authorId');
+      expect(foreignKeys[0].referencedTableName).to.eq('authors');
+      expect(foreignKeys[0].referencedColumnName).to.eq('id');
     });
 
     it('emits an error event as the referenced table name is invalid', async function() {
@@ -2370,6 +2404,10 @@ describe(Support.getTestDialectTeaser('Model'), () => {
           expect(err.message).to.match(/relation "4uth0r5" does not exist/);
         } else if (dialect === 'mssql') {
           expect(err.message).to.match(/Could not create constraint/);
+        } else if (dialect === 'db2') {
+          expect(err.message).to.match(/ is an undefined name/);
+        } else if (dialect === 'oracle') {
+          expect(err.message).to.match(/ORA-00942: table or view does not exist/);
         } else {
           throw new Error('Undefined dialect!');
         }
