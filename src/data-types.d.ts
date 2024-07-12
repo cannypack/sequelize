@@ -105,7 +105,7 @@ export interface CharDataType extends StringDataType {
 
 export interface CharDataTypeOptions extends StringDataTypeOptions {}
 
-export type TextLength = 'tiny' | 'medium' | 'long';
+export type TextLength = "tiny" | "medium" | "long";
 
 /**
  * An (un)limited length text column. Available lengths: `tiny`, `medium`, `long`
@@ -163,8 +163,8 @@ export interface NumberDataTypeOptions extends IntegerDataTypeOptions {
 export const TINYINT: TinyIntegerDataTypeConstructor;
 
 interface TinyIntegerDataTypeConstructor extends NumberDataTypeConstructor {
-  new (options?: IntegerDataTypeOptions): TinyIntegerDataType;
-  (options?: IntegerDataTypeOptions): TinyIntegerDataType;
+  new (options?: IntegerDataTypeOptions | number): TinyIntegerDataType;
+  (options?: IntegerDataTypeOptions | number): TinyIntegerDataType;
 }
 
 export interface TinyIntegerDataType extends NumberDataType {
@@ -177,8 +177,8 @@ export interface TinyIntegerDataType extends NumberDataType {
 export const SMALLINT: SmallIntegerDataTypeConstructor;
 
 interface SmallIntegerDataTypeConstructor extends NumberDataTypeConstructor {
-  new (options?: IntegerDataTypeOptions): SmallIntegerDataType;
-  (options?: IntegerDataTypeOptions): SmallIntegerDataType;
+  new (options?: IntegerDataTypeOptions | number): SmallIntegerDataType;
+  (options?: IntegerDataTypeOptions | number): SmallIntegerDataType;
 }
 
 export interface SmallIntegerDataType extends NumberDataType {
@@ -191,8 +191,8 @@ export interface SmallIntegerDataType extends NumberDataType {
 export const MEDIUMINT: MediumIntegerDataTypeConstructor;
 
 interface MediumIntegerDataTypeConstructor extends NumberDataTypeConstructor {
-  new (options?: IntegerDataTypeOptions): MediumIntegerDataType;
-  (options?: IntegerDataTypeOptions): MediumIntegerDataType;
+  new (options?: IntegerDataTypeOptions | number): MediumIntegerDataType;
+  (options?: IntegerDataTypeOptions | number): MediumIntegerDataType;
 }
 
 export interface MediumIntegerDataType extends NumberDataType {
@@ -205,8 +205,8 @@ export interface MediumIntegerDataType extends NumberDataType {
 export const INTEGER: IntegerDataTypeConstructor;
 
 interface IntegerDataTypeConstructor extends NumberDataTypeConstructor {
-  new (options?: NumberDataTypeOptions): IntegerDataType;
-  (options?: NumberDataTypeOptions): IntegerDataType;
+  new (options?: NumberDataTypeOptions | number): IntegerDataType;
+  (options?: NumberDataTypeOptions | number): IntegerDataType;
 }
 
 export interface IntegerDataType extends NumberDataType {
@@ -222,8 +222,8 @@ export interface IntegerDataType extends NumberDataType {
 export const BIGINT: BigIntDataTypeConstructor;
 
 interface BigIntDataTypeConstructor extends NumberDataTypeConstructor {
-  new (options?: IntegerDataTypeOptions): BigIntDataType;
-  (options?: IntegerDataTypeOptions): BigIntDataType;
+  new (options?: IntegerDataTypeOptions | number): BigIntDataType;
+  (options?: IntegerDataTypeOptions | number): BigIntDataType;
 }
 
 export interface BigIntDataType extends NumberDataType {
@@ -356,9 +356,7 @@ interface DateOnlyDataTypeConstructor extends AbstractDataTypeConstructor {
   (): DateOnlyDataType;
 }
 
-export interface DateOnlyDataType extends AbstractDataType {
-}
-
+export interface DateOnlyDataType extends AbstractDataType {}
 
 /**
  * A key / value column. Only available in postgres.
@@ -384,7 +382,7 @@ export const NOW: AbstractDataTypeConstructor;
  */
 export const BLOB: BlobDataTypeConstructor;
 
-export type BlobSize = 'tiny' | 'medium' | 'long';
+export type BlobSize = "tiny" | "medium" | "long";
 
 interface BlobDataTypeConstructor extends AbstractDataTypeConstructor {
   new (length?: BlobSize): BlobDataType;
@@ -425,12 +423,17 @@ export type RangeableDataType =
 
 interface RangeDataTypeConstructor extends AbstractDataTypeConstructor {
   new <T extends RangeableDataType>(subtype?: T): RangeDataType<T>;
-  new <T extends RangeableDataType>(options: RangeDataTypeOptions<T>): RangeDataType<T>;
+  new <T extends RangeableDataType>(
+    options: RangeDataTypeOptions<T>
+  ): RangeDataType<T>;
   <T extends RangeableDataType>(subtype?: T): RangeDataType<T>;
-  <T extends RangeableDataType>(options: RangeDataTypeOptions<T>): RangeDataType<T>;
+  <T extends RangeableDataType>(
+    options: RangeDataTypeOptions<T>
+  ): RangeDataType<T>;
 }
 
-export interface RangeDataType<T extends RangeableDataType> extends AbstractDataType {
+export interface RangeDataType<T extends RangeableDataType>
+  extends AbstractDataType {
   options: RangeDataTypeOptions<T>;
 }
 
@@ -497,13 +500,19 @@ export const UUIDV4: AbstractDataTypeConstructor;
 export const VIRTUAL: VirtualDataTypeConstructor;
 
 interface VirtualDataTypeConstructor extends AbstractDataTypeConstructor {
-  new <T extends AbstractDataTypeConstructor | AbstractDataType>(ReturnType: T, fields?: string[]): VirtualDataType<
-    T
-  >;
-  <T extends AbstractDataTypeConstructor | AbstractDataType>(ReturnType: T, fields?: string[]): VirtualDataType<T>;
+  new <T extends AbstractDataTypeConstructor | AbstractDataType>(
+    ReturnType: T,
+    fields?: string[]
+  ): VirtualDataType<T>;
+  <T extends AbstractDataTypeConstructor | AbstractDataType>(
+    ReturnType: T,
+    fields?: string[]
+  ): VirtualDataType<T>;
 }
 
-export interface VirtualDataType<T extends AbstractDataTypeConstructor | AbstractDataType> extends AbstractDataType {
+export interface VirtualDataType<
+  T extends AbstractDataTypeConstructor | AbstractDataType
+> extends AbstractDataType {
   returnType: T;
   fields: string[];
 }
@@ -535,18 +544,33 @@ export interface EnumDataTypeOptions<T extends string> {
 export const ARRAY: ArrayDataTypeConstructor;
 
 interface ArrayDataTypeConstructor extends AbstractDataTypeConstructor {
-  new <T extends AbstractDataTypeConstructor | AbstractDataType>(type: T): ArrayDataType<T>;
-  new <T extends AbstractDataTypeConstructor | AbstractDataType>(options: ArrayDataTypeOptions<T>): ArrayDataType<T>;
-  <T extends AbstractDataTypeConstructor | AbstractDataType>(type: T): ArrayDataType<T>;
-  <T extends AbstractDataTypeConstructor | AbstractDataType>(options: ArrayDataTypeOptions<T>): ArrayDataType<T>;
-  is<T extends AbstractDataTypeConstructor | AbstractDataType>(obj: unknown, type: T): obj is ArrayDataType<T>;
+  new <T extends AbstractDataTypeConstructor | AbstractDataType>(
+    type: T
+  ): ArrayDataType<T>;
+  new <T extends AbstractDataTypeConstructor | AbstractDataType>(
+    options: ArrayDataTypeOptions<T>
+  ): ArrayDataType<T>;
+  <T extends AbstractDataTypeConstructor | AbstractDataType>(
+    type: T
+  ): ArrayDataType<T>;
+  <T extends AbstractDataTypeConstructor | AbstractDataType>(
+    options: ArrayDataTypeOptions<T>
+  ): ArrayDataType<T>;
+  is<T extends AbstractDataTypeConstructor | AbstractDataType>(
+    obj: unknown,
+    type: T
+  ): obj is ArrayDataType<T>;
 }
 
-export interface ArrayDataType<T extends AbstractDataTypeConstructor | AbstractDataType> extends AbstractDataType {
+export interface ArrayDataType<
+  T extends AbstractDataTypeConstructor | AbstractDataType
+> extends AbstractDataType {
   options: ArrayDataTypeOptions<T>;
 }
 
-export interface ArrayDataTypeOptions<T extends AbstractDataTypeConstructor | AbstractDataType> {
+export interface ArrayDataTypeOptions<
+  T extends AbstractDataTypeConstructor | AbstractDataType
+> {
   type: T;
 }
 
