@@ -1,3 +1,17 @@
+# Cannypack sequelize
+
+This is the fork of Sequelize adjusted for our needs.
+
+## Upgrading
+
+See [upgrade guide](https://cannypack.atlassian.net/wiki/x/AYBFsg).
+
+## Publishing new version
+
+See [private NPM packages docs](https://cannypack.atlassian.net/wiki/x/EQBM5Q).
+
+# Original readme
+
 <p align="center">
   <img src="logo.svg" width="100" alt="Sequelize logo" />
   <h1 align="center"><a href="https://sequelize.org">Sequelize</a></h1>
