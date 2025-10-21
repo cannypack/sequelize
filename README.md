@@ -8,7 +8,12 @@ See [upgrade guide](https://cannypack.atlassian.net/wiki/x/AYBFsg).
 
 ## Publishing new version
 
-See [private NPM packages docs](https://cannypack.atlassian.net/wiki/x/EQBM5Q).
+1. Make changes to the code
+2. Bump version in `package.json`
+3. Publish the package:
+   ```bash
+   yarn build && yarn publish
+   ```
 
 # Original readme
 
