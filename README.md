@@ -1,22 +1,3 @@
-# Cannypack sequelize
-
-This is the fork of Sequelize adjusted for our needs.
-
-## Upgrading
-
-See [upgrade guide](https://cannypack.atlassian.net/wiki/x/AYBFsg).
-
-## Publishing new version
-
-1. Make changes to the code
-2. Bump version in `package.json`
-3. Publish the package:
-   ```bash
-   yarn build && yarn publish
-   ```
-
-# Original readme
-
 <p align="center">
   <img src="logo.svg" width="100" alt="Sequelize logo" />
   <h1 align="center"><a href="https://sequelize.org">Sequelize</a></h1>
